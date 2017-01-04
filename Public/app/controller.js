@@ -39,9 +39,9 @@
     });
 
     uploader.validateCSV = function () {
-      console.log('hello', csvFile);
-      // $scope.isValidated = true;
-      // parseCSV(csvFile);
+      console.log('hello', $scope.fileContent);
+      $scope.isValidated = true;
+      parseCSV($scope.fileContent);
     };
     // CALLBACKS
 
@@ -52,6 +52,7 @@
       console.info('onAfterAddingFile', fileItem);
     };
     uploader.onAfterAddingAll = function (addedFileItems) {
+      console.log('all files', addedFileItems);
       csvFile = addedFileItems[0];
       console.log('Have the file in', csvFile);
       console.info('onAfterAddingAll', addedFileItems);
@@ -100,7 +101,7 @@
     // console.log(words);
     $scope.validateCSV = function () {
       $scope.isValidated = true;
-      console.log('hello', csvFile);
+      console.log('hello', $);
       parseCSV(csvFile);
     };
 
@@ -109,7 +110,7 @@
     }
 
     function handleParseError(result) {
-      // display error message to the user
+      console.log('Errors', result);
     }
 
     function parsingFinished() {
@@ -117,7 +118,11 @@
     }
 
     function parseCSV(data) {
-      Papa.parse(data)
+      Papa.parse(data, {
+        delimiter: "",	// auto-detect
+        newline: "",	// auto-detect
+        header: true
+      })
         .then(handleParseResult)
         .catch(handleParseError)
         .finally(parsingFinished);
