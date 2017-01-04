@@ -44,11 +44,6 @@
         controller: 'MainController',
         controllerAs: 'main'
       })
-      .when('/contact', {
-        templateUrl: 'views/contact.html',
-        controller: 'MainController',
-        controllerAs: 'main'
-      })
       .when('/setup', {
         templateUrl: 'views/setup.html',
         controller: 'MainController',
