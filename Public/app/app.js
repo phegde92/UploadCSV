@@ -18,7 +18,8 @@
   angular
     .module('boilerplate', [
       'ngRoute',
-      'firebase'
+      'firebase',
+      'angularFileUpload'
     ])
     .config(config);
 
