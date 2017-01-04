@@ -19,7 +19,8 @@
     .module('boilerplate', [
       'ngRoute',
       'firebase',
-      'angularFileUpload'
+      'angularFileUpload',
+      'papa-promise'
     ])
     .config(config);
 
@@ -46,7 +47,7 @@
         controllerAs: 'main'
       })
       .when('/setup', {
-        templateUrl: 'views/setup.html',
+        templateUrl: 'views/instructions.html',
         controller: 'MainController',
         controllerAs: 'main'
       })

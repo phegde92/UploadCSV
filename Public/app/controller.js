@@ -11,72 +11,79 @@
     .module('boilerplate')
     .controller('MainController', MainController);
 
-  MainController.$inject = ['LocalStorage', 'QueryService', '$firebaseArray', 'MyStorage', 'FileUploader','$scope'];
+  MainController.$inject = ['LocalStorage', 'QueryService', '$firebaseArray', 'MyStorage', 'FileUploader', '$scope', 'Papa'];
 
 
-  function MainController(LocalStorage, QueryService, $firebaseArray, MyStorage, FileUploader, $scope) {
-     var csvFile;
-     var uploader = $scope.uploader = new FileUploader({
-        });
+  function MainController(LocalStorage, QueryService, $firebaseArray, MyStorage, FileUploader, $scope, Papa) {
+    var csvFile;
+    $scope.isValidated = false;
+    var uploader = $scope.uploader = new FileUploader({
+      url: 'upload.php'
+    });
 
-        uploader.filters.push({
-            name: 'syncFilter',
-            fn: function(item /*{File|FileLikeObject}*/, options) {
-                console.log('syncFilter');
-                return this.queue.length < 10;
-            }
-        });
-      
-        // an async filter
-        uploader.filters.push({
-            name: 'asyncFilter',
-            fn: function(item /*{File|FileLikeObject}*/, options, deferred) {
-                console.log('asyncFilter');
-                setTimeout(deferred.resolve, 1e3);
-            }
-        });
+    uploader.filters.push({
+      name: 'syncFilter',
+      fn: function (item /*{File|FileLikeObject}*/, options) {
+        console.log('syncFilter');
+        return this.queue.length < 10;
+      }
+    });
 
-        // CALLBACKS
+    // an async filter
+    uploader.filters.push({
+      name: 'asyncFilter',
+      fn: function (item /*{File|FileLikeObject}*/, options, deferred) {
+        console.log('asyncFilter');
+        setTimeout(deferred.resolve, 1e3);
+      }
+    });
 
-        uploader.onWhenAddingFileFailed = function(item /*{File|FileLikeObject}*/, filter, options) {
-            console.info('onWhenAddingFileFailed', item, filter, options);
-        };
-        uploader.onAfterAddingFile = function(fileItem) {
-            console.info('onAfterAddingFile', fileItem);
-        };
-        uploader.onAfterAddingAll = function(addedFileItems) {
-          csvFile = addedFileItems[0].file;
-          console.log('Have the file in', csvFile);
-            console.info('onAfterAddingAll', addedFileItems);
-        };
-        uploader.onBeforeUploadItem = function(item) {
-            console.info('onBeforeUploadItem', item);
-        };
-        uploader.onProgressItem = function(fileItem, progress) {
-            console.info('onProgressItem', fileItem, progress);
-        };
-        uploader.onProgressAll = function(progress) {
-            console.info('onProgressAll', progress);
-        };
-        uploader.onSuccessItem = function(fileItem, response, status, headers) {
-            console.info('onSuccessItem', fileItem, response, status, headers);
-        };
-        uploader.onErrorItem = function(fileItem, response, status, headers) {
-            console.info('onErrorItem', fileItem, response, status, headers);
-        };
-        uploader.onCancelItem = function(fileItem, response, status, headers) {
-            console.info('onCancelItem', fileItem, response, status, headers);
-        };
-        uploader.onCompleteItem = function(fileItem, response, status, headers) {
-            console.info('onCompleteItem', fileItem, response, status, headers);
-        };
-        uploader.onCompleteAll = function() {
-            console.info('onCompleteAll');
-        };
+    uploader.validateCSV = function () {
+      console.log('hello', csvFile);
+      // $scope.isValidated = true;
+      // parseCSV(csvFile);
+    };
+    // CALLBACKS
 
-        console.info('uploader', uploader);
+    uploader.onWhenAddingFileFailed = function (item /*{File|FileLikeObject}*/, filter, options) {
+      console.info('onWhenAddingFileFailed', item, filter, options);
+    };
+    uploader.onAfterAddingFile = function (fileItem) {
+      console.info('onAfterAddingFile', fileItem);
+    };
+    uploader.onAfterAddingAll = function (addedFileItems) {
+      csvFile = addedFileItems[0];
+      console.log('Have the file in', csvFile);
+      console.info('onAfterAddingAll', addedFileItems);
+    };
+    uploader.onBeforeUploadItem = function (item) {
+      console.info('onBeforeUploadItem', item);
+    };
+    uploader.onProgressItem = function (fileItem, progress) {
+      console.info('onProgressItem', fileItem, progress);
+    };
+    uploader.onProgressAll = function (progress) {
+      console.info('onProgressAll', progress);
+    };
+    uploader.onSuccessItem = function (fileItem, response, status, headers) {
+      console.info('onSuccessItem', fileItem, response, status, headers);
+    };
+    uploader.onErrorItem = function (fileItem, response, status, headers) {
+      console.info('onErrorItem', fileItem, response, status, headers);
+    };
+    uploader.onCancelItem = function (fileItem, response, status, headers) {
+      console.info('onCancelItem', fileItem, response, status, headers);
+    };
+    uploader.onCompleteItem = function (fileItem, response, status, headers) {
+      console.info('onCompleteItem', fileItem, response, status, headers);
+    };
+    uploader.onCompleteAll = function () {
+      console.info('onCompleteAll');
+    };
 
-  // 'controller as' syntax
+    console.info('uploader', uploader);
+
+    // 'controller as' syntax
     var self = this;
     var ref = firebase.database().ref();
     var words;
@@ -85,15 +92,48 @@
       words = data.words;
       ref.set(words);
     });
-    
+
 
 
     // var ref = firebase.database().ref().child("words");
     // var words = $firebaseArray(ref);
     // console.log(words);
-    var uploadData = function () {
-
+    $scope.validateCSV = function () {
+      $scope.isValidated = true;
+      console.log('hello', csvFile);
+      parseCSV(csvFile);
     };
+
+    function handleParseResult(result) {
+      console.log('Parsed Data', result);
+    }
+
+    function handleParseError(result) {
+      // display error message to the user
+    }
+
+    function parsingFinished() {
+      // whatever needs to be done after the parsing has finished
+    }
+
+    function parseCSV(data) {
+      Papa.parse(data)
+        .then(handleParseResult)
+        .catch(handleParseError)
+        .finally(parsingFinished);
+    }
+
+    function jsonToCSV(json) {
+      Papa.unparse(data)
+        .then(handleParseResult)
+        .catch(handleParseError)
+        .finally(parsingFinished);
+    }
+
+    angular.extend(this, {
+      parseCSV: parseCSV,
+      jsonToCSV: jsonToCSV
+    });
 
     ////////////  function definitions
 
