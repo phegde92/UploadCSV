@@ -15,10 +15,17 @@
 
 
   function MainController(LocalStorage, QueryService, $firebaseArray, MyStorage, FileUploader, $scope, Papa) {
+    var self = this;
+    var ref = firebase.database().ref();
     var csvFile;
+    var words;
+    $scope.validatedCSV = "";
+
+
+
     $scope.isValidated = false;
+    $scope.showMessage = false;
     var uploader = $scope.uploader = new FileUploader({
-      url: 'upload.php'
     });
 
     uploader.filters.push({
@@ -39,9 +46,34 @@
     });
 
     uploader.validateCSV = function () {
-      console.log('hello', $scope.fileContent);
-      $scope.isValidated = true;
+      console.log('fileContent', $scope.fileContent);
       parseCSV($scope.fileContent);
+    };
+
+    String.prototype.escapeSpecialChars = function() {
+    return this.replace(/\\n/g, "\\n")
+               .replace(/\\'/g, "\\'")
+               .replace(/\\"/g, '\\"')
+               .replace(/\\r/g, '')
+               .replace(/\\t/g, "\\t")
+               .replace(/\\b/g, "\\b")
+               .replace(/\\f/g, "\\f");
+};
+
+    uploader.uploadToFirebase = function () {
+
+        console.log('success', $scope.validatedCSV.data);
+        var data = JSON.stringify($scope.validatedCSV.data);
+        var preparedData = data.escapeSpecialChars();
+        var JSONObject = JSON.parse(preparedData);
+        console.log('after stringify', data);
+        console.log('after replace', preparedData);
+        console.log('lol', JSONObject);
+        
+        // words = data.words;
+        ref.set(JSONObject);
+
+
     };
     // CALLBACKS
 
@@ -70,12 +102,12 @@
       console.info('onSuccessItem', fileItem, response, status, headers);
     };
     uploader.onErrorItem = function (fileItem, response, status, headers) {
-      console.info('onErrorItem', fileItem, response, status, headers);
     };
     uploader.onCancelItem = function (fileItem, response, status, headers) {
       console.info('onCancelItem', fileItem, response, status, headers);
     };
     uploader.onCompleteItem = function (fileItem, response, status, headers) {
+      uploader.uploadToFirebase();
       console.info('onCompleteItem', fileItem, response, status, headers);
     };
     uploader.onCompleteAll = function () {
@@ -85,14 +117,8 @@
     console.info('uploader', uploader);
 
     // 'controller as' syntax
-    var self = this;
-    var ref = firebase.database().ref();
-    var words;
-    MyStorage.getdata().success(function (data) {
-      console.log('success', data);
-      words = data.words;
-      ref.set(words);
-    });
+
+
 
 
 
@@ -100,13 +126,23 @@
     // var words = $firebaseArray(ref);
     // console.log(words);
     $scope.validateCSV = function () {
+      
       $scope.isValidated = true;
       console.log('hello', $);
       parseCSV(csvFile);
     };
 
     function handleParseResult(result) {
-      console.log('Parsed Data', result);
+      console.log('Parsed result', result);
+      if (result.errors.length > 0) {
+        $scope.message = 'Invalid CSV file';
+      }
+      else {
+        $scope.isValidated = true;
+        console.log('Parsed Data', result);
+        $scope.validatedCSV = result;
+      }
+
     }
 
     function handleParseError(result) {
@@ -119,8 +155,8 @@
 
     function parseCSV(data) {
       Papa.parse(data, {
-        delimiter: "",	// auto-detect
-        newline: "",	// auto-detect
+        delimiter: ",",	// auto-detect
+        newline: "\n",	// auto-detect
         header: true
       })
         .then(handleParseResult)
