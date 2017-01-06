@@ -16,7 +16,7 @@
 
   function MainController(LocalStorage, QueryService, $firebaseArray, MyStorage, FileUploader, $scope, Papa) {
     var self = this;
-    var ref = firebase.database().ref();
+    var ref = firebase.database().ref("words");
     var csvFile;
     var words;
     $scope.validatedCSV = "";
@@ -66,9 +66,6 @@
         var data = JSON.stringify($scope.validatedCSV.data);
         var preparedData = data.escapeSpecialChars();
         var JSONObject = JSON.parse(preparedData);
-        console.log('after stringify', data);
-        console.log('after replace', preparedData);
-        console.log('lol', JSONObject);
         
         // words = data.words;
         ref.set(JSONObject);
@@ -81,13 +78,14 @@
       console.info('onWhenAddingFileFailed', item, filter, options);
     };
     uploader.onAfterAddingFile = function (fileItem) {
+      if(uploader.queue.length>1) {
+        console.log('over one file');
+      }
       console.info('onAfterAddingFile', fileItem);
     };
     uploader.onAfterAddingAll = function (addedFileItems) {
-      console.log('all files', addedFileItems);
       csvFile = addedFileItems[0];
-      console.log('Have the file in', csvFile);
-      console.info('onAfterAddingAll', addedFileItems);
+      // console.info('onAfterAddingAll', addedFileItems);
     };
     uploader.onBeforeUploadItem = function (item) {
       console.info('onBeforeUploadItem', item);
@@ -128,7 +126,6 @@
     $scope.validateCSV = function () {
       
       $scope.isValidated = true;
-      console.log('hello', $);
       parseCSV(csvFile);
     };
 
@@ -139,7 +136,13 @@
       }
       else {
         $scope.isValidated = true;
-        console.log('Parsed Data', result);
+        console.log('Def+Example', result.data[0]['Definition+Example']);
+        var array = result.data[0]['Definition+Example'].split("|");
+        var firstWordDef = array[0].split(':');
+        var secondWordDef = array[1].split(':');
+        console.log("after split", array);
+        console.log("firstWordDef", firstWordDef);
+        console.log("akdfjjtWordDef", secondWordDef);
         $scope.validatedCSV = result;
       }
 
@@ -157,7 +160,8 @@
       Papa.parse(data, {
         delimiter: ",",	// auto-detect
         newline: "\n",	// auto-detect
-        header: true
+        header: true,
+        encoding: "UTF-8",
       })
         .then(handleParseResult)
         .catch(handleParseError)
