@@ -21,10 +21,6 @@
     var words = [];
     var finalFileContent;
     $scope.validatedCSV = "";
-
-
-
-
     $scope.isValidated = false;
     $scope.showMessage = false;
     var uploader = $scope.uploader = new FileUploader({
@@ -33,7 +29,7 @@
     uploader.filters.push({
       name: 'syncFilter',
       fn: function (item /*{File|FileLikeObject}*/, options) {
-        console.log('syncFilter');
+        console.log('syncFilter', item);
         return this.queue.length < 10;
       }
     });
@@ -106,10 +102,10 @@
       console.info('onCancelItem', fileItem, response, status, headers);
     };
     uploader.onCompleteItem = function (fileItem, response, status, headers) {
-      uploader.uploadToFirebase();
       console.info('onCompleteItem', fileItem, response, status, headers);
     };
     uploader.onCompleteAll = function () {
+      uploader.uploadToFirebase();
       console.info('onCompleteAll');
     };
 

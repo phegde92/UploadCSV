@@ -48,7 +48,7 @@
       })
       .when('/setup', {
         templateUrl: 'views/instructions.html',
-        controller: 'MainController',
+        controller: 'UploadController',
         controllerAs: 'main'
       })
       .otherwise({
