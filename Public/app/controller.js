@@ -21,8 +21,16 @@
     var words = [];
     var finalFileContent;
     $scope.validatedCSV = "";
-    $scope.isValidated = false;
+    var rowIndex;
+    var isSuccess = false;
+    var isError = false;
+    $scope.isValidated = [];
+    for (var n = 0; n < 100; ++n) {
+      $scope.isValidated[n] = false;
+    }
+
     $scope.showMessage = false;
+    $scope.numOfFilesExceeded = "Please select only one file. Remove the other files to continue.."
     var uploader = $scope.uploader = new FileUploader({
     });
 
@@ -43,7 +51,10 @@
       }
     });
 
-    uploader.validateCSV = function () {
+    uploader.validateCSV = function (index) {
+      console.log('index', index);
+      console.log('isValidated', $scope.isValidated);
+      rowIndex = index;
       parseCSV($scope.fileContent);
     };
 
@@ -120,9 +131,9 @@
     // var ref = firebase.database().ref().child("words");
     // var words = $firebaseArray(ref);
     // console.log(words);
-    $scope.validateCSV = function () {
-
-      $scope.isValidated = true;
+    $scope.validateCSV = function (index) {
+      console.log('index', index);
+      // $scope.isValidated = true;
       parseCSV(csvFile);
     };
 
@@ -132,56 +143,69 @@
         $scope.message = 'Invalid CSV file';
       }
       else {
-        $scope.isValidated = true;
         var count = 0;
         for (count = 0; count < result.data.length; count++) {
-          
           var defExObjects = [];
           var wordObject = {};
-          var defExArray = result.data[count]['Definition+Example'].split(";");
-          // console.log('defExArray', defExArray);
-
-          for (var i = 0; i < defExArray.length; i++) {
-            if (defExArray[i].length > 0) {
-              var defEx = defExArray[i].split(':');
-              // console.log('Each Def Example', defEx);
-              if (defEx.length > 1) {
-                var defExObject = {};
-                var examples = defEx[1].split('|');
-                // console.log('Definition', defEx[0]);
-                // console.log('Examples for each def', examples);
-                defExObject['Definition'] = defEx[0];
-                defExObject['Examples'] = examples;
-                defExObjects.push(defExObject);
+          console.log('fishy',result.data);
+          var defPlusExample = result.data[count]['Definition+Example'];
+          console.log(defPlusExample);
+          if (defPlusExample != undefined) {
+            $scope.isValidated[rowIndex] = true;
+            $scope.message = "";
+            var defExArray = defPlusExample.split(";");
+            // console.log('defExArray', defExArray);
+            if (defExArray.length > 0) {
+              for (var i = 0; i < defExArray.length; i++) {
+                if (defExArray[i].length > 0) {
+                  var defEx = defExArray[i].split(':');
+                  // console.log('Each Def Example', defEx);
+                  if (defEx.length > 1) {
+                    var defExObject = {};
+                    var examples = defEx[1].split('|');
+                    // console.log('Definition', defEx[0]);
+                    // console.log('Examples for each def', examples);
+                    defExObject['Definition'] = defEx[0];
+                    defExObject['Examples'] = examples;
+                    defExObjects.push(defExObject);
+                  }
+                }
               }
+              createWordObjects(result.data[count], defExObjects);
+            }
+            else {
+              $scope.message = 'Invalid CSV file';
             }
           }
-
-          createWordObjects(result.data[count], defExObjects);
+          else {
+            $scope.message = 'Invalid CSV file';
+          }
         }
-        // angular.forEach(result.data, function(value){
-        //   console.log('Each one',value['Definition+Example']);
-        // var array = value['Definition+Example'].split(";");  
-        // var defExObject = {};
-        // console.log('array of defExs', array);
 
-
-        // });
-        // var array = result.data[0]['Definition+Example'].split(";");
-        // var firstWordDef = array[0].split(':');
-        // var secondWordDef = array[1].split(':');
-        // console.log("after split", array);
-        // console.log("firstWordDef", firstWordDef);
-        // console.log("akdfjjtWordDef", secondWordDef);
       }
+      // angular.forEach(result.data, function(value){
+      //   console.log('Each one',value['Definition+Example']);
+      // var array = value['Definition+Example'].split(";");  
+      // var defExObject = {};
+      // console.log('array of defExs', array);
+
+
+      // });
+      // var array = result.data[0]['Definition+Example'].split(";");
+      // var firstWordDef = array[0].split(':');
+      // var secondWordDef = array[1].split(':');
+      // console.log("after split", array);
+      // console.log("firstWordDef", firstWordDef);
+      // console.log("akdfjjtWordDef", secondWordDef);
+
 
     }
 
     function createWordObjects(mainWordObj, defExObjects) {
       var newWord = new WordObj(defExObjects, mainWordObj["Grammar Info"], mainWordObj["Idioms"], mainWordObj["Phrasal Verb"], mainWordObj["Pronunciation"],
-       mainWordObj["Related Vocabulary"], mainWordObj["Roots"], mainWordObj["Translation"], mainWordObj["Word"]);
+        mainWordObj["Related Vocabulary"], mainWordObj["Roots"], mainWordObj["Translation"], mainWordObj["Word"]);
 
-       words.push(newWord);
+      words.push(newWord);
       console.log('Final Parsed result', words);
 
     }
