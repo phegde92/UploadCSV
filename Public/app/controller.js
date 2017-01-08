@@ -18,8 +18,10 @@
     var self = this;
     var ref = firebase.database().ref("words");
     var csvFile;
-    var words;
+    var words = [];
+    var finalFileContent;
     $scope.validatedCSV = "";
+
 
 
 
@@ -46,29 +48,27 @@
     });
 
     uploader.validateCSV = function () {
-      console.log('fileContent', $scope.fileContent);
       parseCSV($scope.fileContent);
     };
 
-    String.prototype.escapeSpecialChars = function() {
-    return this.replace(/\\n/g, "\\n")
-               .replace(/\\'/g, "\\'")
-               .replace(/\\"/g, '\\"')
-               .replace(/\\r/g, '')
-               .replace(/\\t/g, "\\t")
-               .replace(/\\b/g, "\\b")
-               .replace(/\\f/g, "\\f");
-};
+    String.prototype.escapeSpecialChars = function () {
+      return this.replace(/\\n/g, "\\n")
+        .replace(/\\'/g, "\\'")
+        .replace(/\\"/g, '\\"')
+        .replace(/\\r/g, '')
+        .replace(/\\t/g, "\\t")
+        .replace(/\\b/g, "\\b")
+        .replace(/\\f/g, "\\f");
+    };
 
     uploader.uploadToFirebase = function () {
 
-        console.log('success', $scope.validatedCSV.data);
-        var data = JSON.stringify($scope.validatedCSV.data);
-        var preparedData = data.escapeSpecialChars();
-        var JSONObject = JSON.parse(preparedData);
-        
-        // words = data.words;
-        ref.set(JSONObject);
+      var data = JSON.stringify(words);
+      var preparedData = data.escapeSpecialChars();
+      var JSONObject = JSON.parse(preparedData);
+
+      // words = data.words;
+      ref.set(JSONObject);
 
 
     };
@@ -78,9 +78,10 @@
       console.info('onWhenAddingFileFailed', item, filter, options);
     };
     uploader.onAfterAddingFile = function (fileItem) {
-      if(uploader.queue.length>1) {
+      if (uploader.queue.length > 1) {
         console.log('over one file');
       }
+      finalFileContent = $scope.fileContent;
       console.info('onAfterAddingFile', fileItem);
     };
     uploader.onAfterAddingAll = function (addedFileItems) {
@@ -124,7 +125,7 @@
     // var words = $firebaseArray(ref);
     // console.log(words);
     $scope.validateCSV = function () {
-      
+
       $scope.isValidated = true;
       parseCSV(csvFile);
     };
@@ -136,16 +137,69 @@
       }
       else {
         $scope.isValidated = true;
-        console.log('Def+Example', result.data[0]['Definition+Example']);
-        var array = result.data[0]['Definition+Example'].split("|");
-        var firstWordDef = array[0].split(':');
-        var secondWordDef = array[1].split(':');
-        console.log("after split", array);
-        console.log("firstWordDef", firstWordDef);
-        console.log("akdfjjtWordDef", secondWordDef);
-        $scope.validatedCSV = result;
+        var count = 0;
+        for (count = 0; count < result.data.length; count++) {
+          
+          var defExObjects = [];
+          var wordObject = {};
+          var defExArray = result.data[count]['Definition+Example'].split(";");
+          // console.log('defExArray', defExArray);
+
+          for (var i = 0; i < defExArray.length; i++) {
+            if (defExArray[i].length > 0) {
+              var defEx = defExArray[i].split(':');
+              // console.log('Each Def Example', defEx);
+              if (defEx.length > 1) {
+                var defExObject = {};
+                var examples = defEx[1].split('|');
+                // console.log('Definition', defEx[0]);
+                // console.log('Examples for each def', examples);
+                defExObject['Definition'] = defEx[0];
+                defExObject['Examples'] = examples;
+                defExObjects.push(defExObject);
+              }
+            }
+          }
+
+          createWordObjects(result.data[count], defExObjects);
+        }
+        // angular.forEach(result.data, function(value){
+        //   console.log('Each one',value['Definition+Example']);
+        // var array = value['Definition+Example'].split(";");  
+        // var defExObject = {};
+        // console.log('array of defExs', array);
+
+
+        // });
+        // var array = result.data[0]['Definition+Example'].split(";");
+        // var firstWordDef = array[0].split(':');
+        // var secondWordDef = array[1].split(':');
+        // console.log("after split", array);
+        // console.log("firstWordDef", firstWordDef);
+        // console.log("akdfjjtWordDef", secondWordDef);
       }
 
+    }
+
+    function createWordObjects(mainWordObj, defExObjects) {
+      var newWord = new WordObj(defExObjects, mainWordObj["Grammar Info"], mainWordObj["Idioms"], mainWordObj["Phrasal Verb"], mainWordObj["Pronunciation"],
+       mainWordObj["Related Vocabulary"], mainWordObj["Roots"], mainWordObj["Translation"], mainWordObj["Word"]);
+
+       words.push(newWord);
+      console.log('Final Parsed result', words);
+
+    }
+
+    function WordObj(wordDefs, grammarInfo, idioms, phrasalVerb, pronunciation, relatedVocab, roots, translation, word) {
+      this.definitionExample = wordDefs;
+      this.grammarInfo = grammarInfo;
+      this.idioms = idioms;
+      this.phrasalVerb = phrasalVerb;
+      this.pronunciation = pronunciation;
+      this.relatedVocabulary = relatedVocab;
+      this.roots = roots;
+      this.translation = translation;
+      this.word = word;
     }
 
     function handleParseError(result) {
@@ -166,6 +220,30 @@
         .then(handleParseResult)
         .catch(handleParseError)
         .finally(parsingFinished);
+    }
+
+    function parseDefEx(data) {
+      Papa.parse(data, {
+        delimiter: ";",	// auto-detect
+        newline: "\n",	// auto-detect
+        header: false,
+        encoding: "UTF-8",
+      })
+        .then(handleParseResultDefEx)
+        .catch(handleParseErrorDefEx)
+        .finally(parsingFinishedDefEx);
+    }
+
+    function handleParseErrorDefEx(result) {
+      console.log('Errors', result);
+    }
+
+    function parsingFinishedDefEx() {
+      // whatever needs to be done after the parsing has finished
+    }
+
+    function handleParseResultDefEx(result) {
+      console.log(result);
     }
 
     function jsonToCSV(json) {
