@@ -33,9 +33,8 @@
 </div>
 </td>
 <td class="text-center">
-  <span ng-show="item.isSuccess"><i class="glyphicon glyphicon-ok"></i></span>
-  <span ng-show="item.isCancel"><i class="glyphicon glyphicon-ban-circle"></i></span>
-  <span ng-show="item.isError"><i class="glyphicon glyphicon-remove"></i></span>
+  <span ng-if="isValidated[$index]===true"><i class="glyphicon glyphicon-ok"></i></span>
+  <span ng-if="isValidated[$index]===false"><i class="glyphicon glyphicon-remove"></i></span>
 </td>
 
 <td nowrap>
