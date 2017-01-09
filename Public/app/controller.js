@@ -17,6 +17,7 @@
   function MainController(LocalStorage, QueryService, $firebaseArray, MyStorage, FileUploader, $scope, Papa) {
     var self = this;
     var ref = firebase.database().ref("words");
+    var audioFilesRef = firebase.database().ref("audioFileNames");
     var csvFile;
     var words = [];
     var finalFileContent;
@@ -69,13 +70,17 @@
     };
 
     uploader.uploadToFirebase = function () {
-
       var data = JSON.stringify(words);
+      var audioFileNames = [];
+      words.forEach(function(element) {
+       audioFileNames.push(element.pronunciation) ;
+      });
+      console.log('audioFileNames',audioFileNames);
       var preparedData = data.escapeSpecialChars();
       var JSONObject = JSON.parse(preparedData);
-
       // words = data.words;
       ref.set(JSONObject);
+      audioFilesRef.set(audioFileNames);
 
 
     };
@@ -147,7 +152,7 @@
         for (count = 0; count < result.data.length; count++) {
           var defExObjects = [];
           var wordObject = {};
-          console.log('fishy',result.data);
+          console.log('fishy', result.data);
           var defPlusExample = result.data[count]['Definition+Example'];
           console.log(defPlusExample);
           if (defPlusExample != undefined) {
