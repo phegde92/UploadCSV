@@ -46,8 +46,8 @@
         controller: 'MainController',
         controllerAs: 'main'
       })
-      .when('/setup', {
-        templateUrl: 'views/instructions.html',
+      .when('/uploadAudio', {
+        templateUrl: 'views/uploadAudio.html',
         controller: 'UploadController',
         controllerAs: 'main'
       })

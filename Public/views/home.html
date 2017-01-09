@@ -5,7 +5,7 @@
 
     <div class="col-md-3">
       Select a file:
-      <input type="file" nv-file-select="" uploader="uploader" file-reader="fileContent" />
+      <input type="file" nv-file-select="" uploader="uploader" file-reader="fileContent" accept=".csv" />
     </div>
 
     <div class="col-md-9" style="margin-bottom: 40px">
@@ -46,7 +46,7 @@
     ng-if="isValidated[$index]===true">
                                         <span class="glyphicon glyphicon-upload"></span> Upload
                                     </button>
-  <button type="button" class="btn btn-danger btn-xs" ng-click="item.remove()">
+  <button type="button" class="btn btn-danger btn-xs" ng-click="item.remove(); removeItem($index);">
                                         <span class="glyphicon glyphicon-trash"></span> Remove
                                     </button>
 </td>

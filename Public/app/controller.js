@@ -69,13 +69,16 @@
         .replace(/\\f/g, "\\f");
     };
 
+    $scope.removeItem = function (index) {
+      $scope.isValidated[index] = false;
+    };
     uploader.uploadToFirebase = function () {
       var data = JSON.stringify(words);
       var audioFileNames = [];
-      words.forEach(function(element) {
-       audioFileNames.push(element.pronunciation) ;
+      words.forEach(function (element) {
+        audioFileNames.push(element.pronunciation);
       });
-      console.log('audioFileNames',audioFileNames);
+      console.log('audioFileNames', audioFileNames);
       var preparedData = data.escapeSpecialChars();
       var JSONObject = JSON.parse(preparedData);
       // words = data.words;
